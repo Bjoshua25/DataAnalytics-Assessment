@@ -27,14 +27,18 @@ Identify customers who have:
 
 ---
 
-### **Logic Overview**
+### Logic Overview – Assessment\_Q1
 
-* A **savings plan**: `is_regular_savings = 1`
-* An **investment plan**: `is_a_fund = 1`
-* Only consider **funded plans** where `confirmed_amount > 0`
-* Count plan types per user using `COUNT(DISTINCT CASE ...)`
-* Aggregate confirmed deposits (converted from **kobo to naira**)
-* Filter to include only customers meeting **both** savings and investment criteria
+This solution uses two Common Table Expressions (CTEs) to modularize and simplify the logic:
+
+1. **`savings_summary` CTE**:
+   Aggregates total confirmed deposits from the `savings_savingsaccount` table for each customer (`owner_id`). Only positive (`> 0`) `confirmed_amount` values are considered. The values remain in *kobo* at this stage.
+
+2. **`plans_summary` CTE**:
+   Counts the number of savings plans (`is_regular_savings = 1`) and investment plans (`is_a_fund = 1`) per customer from the `plans_plan` table. This ensures distinct counting of plan IDs under each category.
+
+The final query joins both CTEs to the `users_customuser` table to retrieve customer details, applying filters to return only those customers with **at least one savings and one investment plan**, and computes the total deposits in **naira** by dividing the `total_savings` by 100. Results are ordered by the deposit amount in descending order.
+
 
 ---
 
