@@ -156,3 +156,110 @@ ROUND(AVG(avg_txn_per_month), 2)
 
 check out the solution in:
 🔗 [Assessment\_Q2.sql](./Assessment_Q2.sql)
+
+---
+
+## 🛑 Assessment\_Q3: Account Inactivity Alert
+
+### Problem Statement
+
+**Scenario:**
+The operations team wants to proactively identify **active accounts** that have shown **no deposit activity in over one year**. These dormant accounts can be flagged for re-engagement campaigns or further investigation.
+
+---
+
+### Objective
+
+Find customers who own either a **savings** or **investment** plan but have **not made any deposit transactions** in the **past 365 days**.
+
+---
+
+### Tables Used
+
+* `plans_plan` – Stores account plans and whether they are savings or investments.
+* `savings_savingsaccount` – Records deposit transactions for savings plans.
+
+---
+
+### Logic Overview
+
+This solution involves **three key CTEs**, each with a specific role:
+
+---
+
+#### 1. `latest_txn`
+
+Captures the **most recent transaction date** for each user, based only on **confirmed deposits**.
+
+```sql
+SELECT owner_id, MAX(created_on) AS last_transaction_date
+FROM savings_savingsaccount
+WHERE confirmed_amount > 0
+GROUP BY owner_id
+```
+
+* Ensures only valid financial activity is considered.
+* Aggregates at the `owner_id` level, not per plan.
+
+---
+
+#### 2. `plan_type`
+
+Labels each plan as either **Savings**, **Investment**, or **Unknown**, depending on its flags:
+
+```sql
+CASE 
+    WHEN is_regular_savings = 1 THEN 'Savings'
+    WHEN is_a_fund = 1 THEN 'Investment'
+    ELSE 'Unknown'
+END
+```
+
+* Extracts `plan_id` and `owner_id` from `plans_plan`.
+* This classification helps in reporting and filtering by account type.
+
+---
+
+#### 3. `inactivity_report`
+
+Joins each **plan** to its owner's **last deposit date**, and computes how long it's been since that activity:
+
+```sql
+DATEDIFF(CURRENT_DATE, lt.last_transaction_date) AS inactivity_days
+```
+
+* Uses a `LEFT JOIN` to include plans even if the user has **never transacted** (i.e., `last_transaction_date` is `NULL`).
+* Calculates the difference between **today's date** and the last transaction date.
+
+---
+
+### Final Output
+
+The final `SELECT` filters for accounts with **inactivity greater than 365 days**:
+
+```sql
+WHERE inactivity_days > 365
+```
+
+This provides a clean list of **currently active accounts** that have been **dormant for over a year**.
+
+---
+
+### Output
+
+| plan\_id                             | owner\_id                         | type       | last\_transaction\_date | inactivity\_days |
+| ------------------------------------ | --------------------------------- | ---------- | ----------------------- | ---------------- |
+| 0085b048534140789c69d66da3aed961     | 17d9345656ef4bf397ca59f2b5a32872  | Savings    | 2021-03-24 16:43:54     | 1517             |
+| 6771820f18824195a73b8a367dfb6cd4     | 17d9345656ef4bf397ca59f2b5a32872  | Unknown    | 2021-03-24 16:43:54     | 1517             |
+
+---
+
+
+### Assumptions
+
+* A row in `savings_savingsaccount` represents a **confirmed transaction**.
+* If a user has no `confirmed_amount` entries, they are considered **completely inactive**.
+* The flag fields (`is_regular_savings`, `is_a_fund`) are **mutually exclusive**, i.e., a plan cannot be both.
+
+check out the solution in:
+🔗 [Assessment\_Q3.sql](./Assessment_Q3.sql)
