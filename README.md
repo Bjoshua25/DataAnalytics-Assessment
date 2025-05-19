@@ -326,10 +326,10 @@ The final query is structured using **three CTEs** (Common Table Expressions) to
 
 ### Final Output
 
-| customer\_id | name     | tenure\_months | total\_transactions | total\_profit | estimated\_clv |
-| ------------ | -------- | -------------- | ------------------- | ------------- | -------------- |
-| 1001         | John Doe | 24             | 120                 | 600.00        | 600.00         |
-| ...          | ...      | ...            | ...                 | ...           | ...            |
+| customer\_id                      | name         | tenure\_months | total\_transactions | total\_profit | estimated\_clv |
+| --------------------------------- | ------------ | -------------- | ------------------- | ------------- | -------------- |
+| 1909df3eba2548cfa3b9c270112bd262  | Ataman Chima | 33             | 1254                | 890312.22     | 323749.9       |
+| 3097d111f15b4c44ac1bf1f4cd5a12ad  | Obi Obi      | 25             | 585                 | 216203.77     | 103777.81      |
 
 Sorted by `estimated_clv DESC` to prioritize high-value customers.
 
