@@ -263,3 +263,75 @@ This provides a clean list of **currently active accounts** that have been **dor
 
 check out the solution in:
 🔗 [Assessment\_Q3.sql](./Assessment_Q3.sql)
+
+---
+
+## 📊 Assessment\_Q4 – Customer Lifetime Value (CLV) Estimation
+
+### Problem Statement
+
+**Scenario:**
+The Marketing team wants to estimate **Customer Lifetime Value (CLV)** using a simplified formula that considers each customer’s tenure and total number of transactions.
+
+> **Objective:** For each customer, calculate their estimated CLV using:
+>
+> ```
+> CLV = (total_transactions / tenure_months) * 12 * average_profit_per_transaction
+> ```
+
+Where:
+
+* **Profit per transaction** is fixed at **0.1%** of the transaction value.
+* All transaction values are initially stored in **kobo** and must be converted to **naira**.
+
+---
+
+### Query Logic Overview
+
+The final query is structured using **three CTEs** (Common Table Expressions) to modularize the steps:
+
+---
+
+#### `user_txns` – Calculate Total Transactions and Profit per User
+
+* Aggregates each user's deposit activity:
+
+  * `COUNT(*)` gives the **number of confirmed deposit transactions**.
+  * `SUM(confirmed_amount)` totals the **value of transactions in kobo**.
+  * That value is multiplied by `0.001` (i.e., 0.1%) to estimate the profit, and then divided by `100` to convert to **naira**.
+* Filters only **confirmed deposits** (`confirmed_amount > 0`).
+
+---
+
+#### `user_tenure` – Calculate Customer Tenure
+
+* Retrieves user details from the `users_customuser` table.
+* Uses `TIMESTAMPDIFF(MONTH, date_joined, CURRENT_DATE)` to compute **tenure in months** from signup to today.
+
+---
+
+#### `clv_calc` – Estimate Customer Lifetime Value
+
+* Joins `user_tenure` with `user_txns` on `customer_id`.
+* Handles missing data using `COALESCE(..., 0)` so that inactive users are included with default 0 values.
+* Uses `NULLIF(..., 0)` to prevent division by zero in cases where tenure or transaction count is zero.
+* Applies the CLV formula:
+
+  ```sql
+  (total_transactions / tenure_months) * 12 * (total_profit / total_transactions)
+  ```
+* The result is rounded to **2 decimal places** and labeled as `estimated_clv`.
+
+---
+
+### Final Output
+
+| customer\_id | name     | tenure\_months | total\_transactions | total\_profit | estimated\_clv |
+| ------------ | -------- | -------------- | ------------------- | ------------- | -------------- |
+| 1001         | John Doe | 24             | 120                 | 600.00        | 600.00         |
+| ...          | ...      | ...            | ...                 | ...           | ...            |
+
+Sorted by `estimated_clv DESC` to prioritize high-value customers.
+
+check out the solution in:
+🔗 [Assessment\_Q4.sql](./Assessment_Q4.sql)
