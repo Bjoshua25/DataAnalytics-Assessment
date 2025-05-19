@@ -10,8 +10,9 @@ WHERE name IS NULL;
 
 -- CTE to Get the sum of all confirmed deposits per users
 WITH savings_summary AS (
-	SELECT owner_id, 
-			SUM(confirmed_amount) AS total_savings
+	SELECT 
+		owner_id, 
+		SUM(confirmed_amount) AS total_savings
     FROM savings_savingsaccount
     WHERE confirmed_amount > 0
     GROUP BY owner_id
