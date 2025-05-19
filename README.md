@@ -49,6 +49,110 @@ The final query joins both CTEs to the `users_customuser` table to retrieve cust
 | 1909df3eba2548cfa3b9c270112bd262 | Ataman Chima | 3              | 9                 | 890312215.48    |
 | 5572810f38b543429ffb218ef15243fc | David Obi    | 108            | 60                | 389632644.11    |
 
----
 check out the solution in:
 🔗 [Assessment\_Q1.sql](./Assessment_Q1.sql)
+
+---
+
+## 📊 Assessment\_Q2: Transaction Frequency Analysis
+
+### Problem Statement
+
+**Scenario:**
+The finance team wants to better understand customer transaction behavior to enable user segmentation. Specifically, they need to analyze how frequently customers transact and classify them as **High**, **Medium**, or **Low Frequency** users based on their activity.
+
+---
+
+### Objective
+
+To calculate the **average number of transactions per customer per month**, and classify them as follows:
+
+* **High Frequency**: ≥ 10 transactions/month
+* **Medium Frequency**: 3–9.99 transactions/month
+* **Low Frequency**: ≤ 2 transactions/month
+
+---
+
+### Tables Used
+
+* `users_customuser` – Customer profile data
+* `savings_savingsaccount` – Each row represents a deposit transaction made by a user (assumption)
+
+---
+
+### Logic Overview
+
+The query is composed of **three key CTEs** and one final aggregation step:
+
+#### 1. `user_transactions`
+
+This CTE calculates:
+
+* **`total_txn`**: the total number of transactions per user.
+* **`raw_months`**: the span (in months) between the user’s **first** and **latest** transaction.
+
+```sql
+TIMESTAMPDIFF(MONTH, MIN(created_on), MAX(created_on))
+```
+
+This assumes:
+
+* Each row in `savings_savingsaccount` is one transaction.
+* The time difference between earliest and latest transaction approximates the active period.
+
+---
+
+#### 2. `monthly_avg`
+
+Refines the transaction span:
+
+* Handles users who transacted **only within a single month** (where `raw_months = 0`) by setting their transaction period to **1 month** — to avoid division by zero.
+* Computes the **average transactions per month**.
+
+```sql
+ROUND(total_txn / CASE WHEN raw_months = 0 THEN 1 ELSE raw_months END, 2)
+```
+
+---
+
+#### 3. `categorized`
+
+Classifies users into frequency bands:
+
+* **High Frequency**: ≥ 10 txns/month
+* **Medium Frequency**: 3–9.99 txns/month
+* **Low Frequency**: ≤ 2 txns/month
+
+---
+
+#### Final SELECT
+
+Aggregates by frequency category:
+
+* Counts the number of users per category
+* Computes the average of each group’s average transactions per month
+
+```sql
+ROUND(AVG(avg_txn_per_month), 2)
+```
+
+---
+
+### Assumptions
+
+* Each row in `savings_savingsaccount` is a **unique deposit transaction**.
+* A user’s **activity duration** is approximated by the difference between their earliest and latest transaction dates.
+* Users with transactions in only **one month** are assumed to have a **1-month tenure** for proper ratio calculation.
+
+---
+
+### Output
+
+| frequency\_category | customer\_count | avg\_transactions\_per\_month |
+| ------------------- | --------------- | ----------------------------- |
+| High Frequency      | 139             | 43.61                          |
+| Medium Frequency    | 175             | 4.75                           |
+| Low Frequency       | 559             | 1.22                           |
+
+check out the solution in:
+🔗 [Assessment\_Q2.sql](./Assessment_Q2.sql)
